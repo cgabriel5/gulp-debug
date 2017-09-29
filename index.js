@@ -38,7 +38,7 @@ module.exports = opts => {
 
 			const output = opts.minimal ? prop(path.relative(process.cwd(), file.path)) : full;
 
-			gutil.log(opts.prefix + ' ' + output + ' ' + chalk.blue(pretty_bytes(file.contents.length)) + ' ' + opts.suffix);
+			gutil.log(opts.prefix + ' ' + output + ' ' + chalk.blue(pretty_bytes((file.contents || "").length)) + ' ' + opts.suffix);
 		}
 
 		count++;
