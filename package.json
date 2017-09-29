@@ -34,6 +34,7 @@
     "chalk": "^1.0.0",
     "gulp-util": "^3.0.0",
     "plur": "^2.0.0",
+    "pretty-bytes": "^4.0.2",
     "stringify-object": "^3.0.0",
     "through2": "^2.0.0",
     "tildify": "^1.1.2"
