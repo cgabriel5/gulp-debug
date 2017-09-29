@@ -6,12 +6,14 @@ const tildify = require('tildify');
 const stringifyObject = require('stringify-object');
 const chalk = require('chalk');
 const plur = require('plur');
+const pretty_bytes = require('pretty-bytes');
 
-const prop = chalk.blue;
+const prop = chalk.magenta;
 
 module.exports = opts => {
 	opts = Object.assign({
-		title: 'gulp-debug:',
+		prefix: (' '.repeat(10) + '├──'),
+		suffix: '',
 		minimal: true,
 		showFiles: true
 	}, opts);
@@ -36,13 +38,13 @@ module.exports = opts => {
 
 			const output = opts.minimal ? prop(path.relative(process.cwd(), file.path)) : full;
 
-			gutil.log(opts.title + ' ' + output);
+			gutil.log(opts.prefix + ' ' + output + ' ' + chalk.blue(pretty_bytes(file.contents.length)) + ' ' + opts.suffix);
 		}
 
 		count++;
 		cb(null, file);
 	}, cb => {
-		gutil.log(opts.title + ' ' + chalk.green(count + ' ' + plur('item', count)));
+		gutil.log(opts.prefix + ' ' + chalk.green(count + ' ' + plur('item', count)));
 		cb();
 	});
 };
