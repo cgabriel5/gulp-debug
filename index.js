@@ -26,7 +26,13 @@ module.exports = opts => {
 
 	let count = 0;
 
-	return through.obj((file, enc, cb) => {
+	return through.obj({
+		// highWaterMark limit stops after 16 objects (16 files)
+		// so set it to Infinity to allow for all the passed in files.
+		// [https://github.com/rvagg/through2/issues/32]
+		// [https://github.com/gulpjs/gulp/issues/716]
+		highWaterMark: Infinity
+    	}, (file, enc, cb) => {
 		if (opts.showFiles) {
 			const full =
 				'\n' +
