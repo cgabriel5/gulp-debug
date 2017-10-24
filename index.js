@@ -11,13 +11,16 @@ const ora = require('ora');
 
 const prop = chalk.magenta;
 
-module.exports = function(opts, action) {
-    opts = Object.assign({
-        prefix: (' '.repeat(10) + '├──'),
+function logger(action) {
+
+    let log_spacer = ' '.repeat(10);
+
+    let opts = Object.assign({
+        prefix: (log_spacer + '├──'),
         suffix: '',
         minimal: true,
         showFiles: true
-    }, opts);
+    }, {});
 
     if (process.argv.indexOf('--verbose') !== -1) {
         opts.verbose = true;
@@ -38,8 +41,8 @@ module.exports = function(opts, action) {
     });
     spinner.start();
 
-    // determine the action
-    action = (!action) ? chalk.yellow('✎') : chalk.red('🗑');
+    // default to an empty string when no action is provided
+    if (!action) action = '';
 
     return through.obj({
         // highWaterMark limit stops after 16 objects (16 files)
@@ -65,7 +68,7 @@ module.exports = function(opts, action) {
             var file_size = chalk.blue(pretty_bytes((file.contents || '')
                 .length));
             // prefix? + action + file_path + file_size + suffix?;
-            var output = `${action} ${file_path} ${file_size}`;
+            var output = `=> ${file_path} ${file_size} ${action}`;
             // add log information to queue
             queue.push(output);
         }
@@ -80,6 +83,10 @@ module.exports = function(opts, action) {
         var file_count = queue.length.toString()
             .length;
 
+        // print log header
+        gutil.log(log_spacer + '┌── log');
+
+        // print queue
         queue.forEach(function(output, index) {
             // increase the index to account for 0 based index
             index = index + 1;
@@ -91,8 +98,17 @@ module.exports = function(opts, action) {
             gutil.log(`${prefix} ${chalk.green(index)}${number_spacer} ${output} ${suffix}`);
         });
 
-        // log file count
-        gutil.log(opts.prefix + ' ' + chalk.green(count + ' ' + plur('item', count)));
+        // print file count
+        gutil.log(log_spacer + '└──' + ' ' + chalk.green(count + ' ' + plur('item', count)));
         cb();
     });
+}
+
+logger.edit = function() {
+    return logger(chalk.yellow('✎'));
 };
+logger.clean = function(replacements) {
+    return logger(chalk.red('🗑'));
+};
+
+module.exports = logger;
