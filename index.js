@@ -10,8 +10,15 @@ const pretty_bytes = require("pretty-bytes");
 const ora = require("ora");
 const prop = chalk.magenta;
 
+/**
+ * Log passed in files' path, file size, and action done to it.
+ *
+ * @param  {object} options - The options object.
+ * @return {object} - The through object.
+ */
 function logger(options) {
-	var log_spacer = " ".repeat(10);
+	// spacer for logging
+	let log_spacer = " ".repeat(10);
 
 	// plugin options
 	let opts = Object.assign(
@@ -22,6 +29,13 @@ function logger(options) {
 			minimal: true,
 			showFiles: true,
 			verbose: false,
+			// the modifier is a function that, when provided, will allow
+			// for the modification of the output. by default no modifier
+			// is used but one can easily be provided. the modifier is passed
+			// an object containing all the file path data needed. the
+			// function should return the newly modified string that will
+			// be used instead.
+			modifier: false,
 			prefix: log_spacer + "├──"
 		},
 		options // merge provided options
@@ -32,6 +46,7 @@ function logger(options) {
 	let suffix = opts.suffix;
 	let loader = opts.loader;
 	let action = opts.action;
+	let modifier = opts.modifier;
 
 	// plugin vars
 	let spinner;
@@ -64,7 +79,7 @@ function logger(options) {
 		},
 		(file, enc, cb) => {
 			if (opts.showFiles) {
-				const full =
+				let full =
 					"\n" +
 					(file.cwd ? "cwd:   " + prop(tildify(file.cwd)) : "") +
 					(file.base ? "\nbase:  " + prop(tildify(file.base)) : "") +
@@ -81,16 +96,37 @@ function logger(options) {
 						: "") +
 					"\n";
 
-				const file_path = opts.minimal
-					? prop(path.relative(process.cwd(), file.path))
-					: full;
-				var file_size = chalk.blue(
+				let file_path_relative = path.relative(
+					process.cwd(),
+					file.path
+				);
+
+				let file_path = opts.minimal ? prop(file_path_relative) : full;
+				let file_size = chalk.blue(
 					pretty_bytes((file.contents || "").length)
 				);
+
 				// prefix? + action + file_path + file_size + suffix?;
-				var output = `=> ${file_path} ${file_size} ${action}`;
+				let output = `=> ${file_path} ${file_size} ${action}`;
+
 				// add log information to queue
-				queue.push(output);
+				queue.push(
+					// this object is to be used with the modifier
+					// optional function. the modifier function will
+					// receive this object to be able to modify the
+					// output if needed. the file object itself is
+					// also passed to the function.
+					{
+						output: output,
+						paths: {
+							absolute: file_path,
+							relative: file_path_relative
+						},
+						size: file_size,
+						action: action,
+						file: file
+					}
+				);
 			}
 
 			count++;
@@ -103,18 +139,31 @@ function logger(options) {
 				spinner.stop(true);
 			}
 
-			var file_count = queue.length.toString().length;
+			// get the file count
+			let file_count = queue.length.toString().length;
 
 			// print log header
 			gutil.log(log_spacer + "┌── log");
 
 			// print queue
-			queue.forEach(function(output, index) {
+			queue.forEach(function(data, index) {
+				// get the needed information
+				let output = data.output;
+
+				// apply modifier function when provided
+				if (modifier) {
+					data = modifier(data);
+					// make the new output
+					output = data.output;
+				}
+
 				// increase the index to account for 0 based index
 				index = index + 1;
+
 				// to keep files aligned account for index number length
-				var number_diff = file_count - index.toString().length;
-				var number_spacer = " ".repeat(number_diff);
+				let number_diff = file_count - index.toString().length;
+				let number_spacer = " ".repeat(number_diff);
+
 				// log file information
 				gutil.log(
 					`${prefix} ${chalk.green(
