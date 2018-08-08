@@ -184,15 +184,11 @@ function logger(options) {
 	);
 }
 
-logger.edit = function() {
-	return logger({
-		action: chalk.yellow("✎")
-	});
+logger.edit = function(options) {
+	return logger(Object.assign(options || {}, { action: chalk.yellow("✎") }));
 };
-logger.clean = function(replacements) {
-	return logger({
-		action: chalk.red("🗑")
-	});
+logger.clean = function(options) {
+	return logger(Object.assign(options || {}, { action: chalk.red("🗑") }));
 };
 
 module.exports = logger;
