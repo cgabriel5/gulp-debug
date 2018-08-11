@@ -25,6 +25,7 @@ function logger(options) {
 		{
 			suffix: "",
 			action: "",
+			title: "",
 			loader: true,
 			minimal: true,
 			showFiles: true,
@@ -47,6 +48,7 @@ function logger(options) {
 	let loader = opts.loader;
 	let action = opts.action;
 	let modifier = opts.modifier;
+	let title = opts.title;
 
 	// plugin vars
 	let spinner;
@@ -143,7 +145,11 @@ function logger(options) {
 			let file_count = queue.length.toString().length;
 
 			// print log header
-			gutil.log(log_spacer + "┌── log");
+			gutil.log(
+				log_spacer +
+					"┌── log" +
+					(title ? ` (${chalk.cyan(title)})` : "")
+			);
 
 			// print queue
 			queue.forEach(function(data, index) {
